@@ -1,7 +1,39 @@
 from Bio import SeqIO
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
 from openpyxl import Workbook
+from openpyxl.drawing.image import Image
 from openpyxl.styles import Font, Alignment
+import os
+
+import matplotlib.pyplot as plt
+image_files = []
+kd_scale = {
+    'A': 1.8, 'R': -4.5, 'N': -3.5, 'D': -3.5,
+    'C': 2.5, 'Q': -3.5, 'E': -3.5, 'G': -0.4,
+    'H': -3.2, 'I': 4.5, 'L': 3.8, 'K': -3.9,
+    'M': 1.9, 'F': 2.8, 'P': -1.6, 'S': -0.8,
+    'T': -0.7, 'W': -0.9, 'Y': -1.3, 'V': 4.2
+}
+
+def save_hydrophobicity_plot(sequence, filename, window_size=9):
+    values = []
+    positions = []
+
+    for i in range(len(sequence) - window_size + 1):
+        window = sequence[i:i+window_size]
+        score = sum(kd_scale[aa] for aa in window) / window_size
+        values.append(score)
+        positions.append(i + window_size // 2)
+
+    plt.figure()
+    plt.plot(positions, values)
+    plt.xlabel("Position")
+    plt.ylabel("Hydrophobicity")
+    plt.title(filename)
+    plt.grid()
+
+    plt.savefig(filename)
+    plt.close()
 
 input_fasta = "input.fasta"
 output_excel = "output.xlsx"
@@ -16,7 +48,9 @@ left = Alignment(horizontal='left')
 
 row = 1  
 
+
 for record in SeqIO.parse(input_fasta, "fasta"):
+    start_row=row
     seq = str(record.seq)
     analysis = ProteinAnalysis(seq)
 
@@ -99,7 +133,20 @@ for record in SeqIO.parse(input_fasta, "fasta"):
     cell.alignment = right
     row += 1
 
-    row += 2  # space before next protein
+    row += 2 
+
+    # Save plot
+    img_filename = f"{record.id}.png"
+    save_hydrophobicity_plot(seq, record.id)
+
+    # Insert image in Excel (right side)
+    img = Image(img_filename)
+
+    # Place image near current protein block
+    img.anchor = f"D{start_row+5}"   # start_row = where protein starts
+    ws.add_image(img)
+    
+    image_files.append(img_filename)
 
 
 ws.column_dimensions['A'].width = 25
@@ -107,4 +154,10 @@ ws.column_dimensions['B'].width = 20
 
 wb.save(output_excel)
 
+for file in image_files:
+    os.remove(file)
 print("Formatted analysis saved to output.xlsx")
+
+import matplotlib.pyplot as plt
+
+
