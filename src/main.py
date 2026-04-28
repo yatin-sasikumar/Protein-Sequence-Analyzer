@@ -135,15 +135,11 @@ for record in SeqIO.parse(input_fasta, "fasta"):
 
     row += 2 
 
-    # Save plot
+   
     img_filename = f"{record.id}.png"
     save_hydrophobicity_plot(seq, record.id)
-
-    # Insert image in Excel (right side)
     img = Image(img_filename)
-
-    # Place image near current protein block
-    img.anchor = f"D{start_row+5}"   # start_row = where protein starts
+    img.anchor = f"D{start_row+5}"
     ws.add_image(img)
     
     image_files.append(img_filename)
