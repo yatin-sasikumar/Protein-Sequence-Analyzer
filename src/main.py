@@ -14,7 +14,7 @@ bold = Font(bold=True)
 right = Alignment(horizontal='right')
 left = Alignment(horizontal='left')
 
-row = 1  # Track current row
+row = 1  
 
 for record in SeqIO.parse(input_fasta, "fasta"):
     seq = str(record.seq)
@@ -34,12 +34,12 @@ for record in SeqIO.parse(input_fasta, "fasta"):
         ws.cell(row=row, column=1, value=aa).alignment = left
 
         cell = ws.cell(row=row, column=2, value=aa_percent[aa]/100)
-        cell.number_format = '0.00%'   # Excel % formatting
+        cell.number_format = '0.00%' 
         cell.alignment = right
 
         row += 1
 
-    row += 1  # empty row
+    row += 1 
 
     # --- Parameters ---
     ws.cell(row=row, column=1, value="Parameter").font = bold
@@ -101,7 +101,7 @@ for record in SeqIO.parse(input_fasta, "fasta"):
 
     row += 2  # space before next protein
 
-# Adjust column widths
+
 ws.column_dimensions['A'].width = 25
 ws.column_dimensions['B'].width = 20
 
