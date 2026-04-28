@@ -1,0 +1,4 @@
+Protein_ID,Length,Molecular_Weight,Isoelectric_Point,GRAVY,Instability_Index,Aromaticity,Helix,Turn,Sheet
+Protein_1,26,3030.7,12.0,0.223,57.08,0.115,0.231,0.231,0.462
+Protein_2,47,5087.96,5.28,3.655,16.51,0.0,0.809,0.0,0.872
+Protein_3,40,4773.41,6.94,-0.49,90.91,0.15,0.25,0.25,0.35
