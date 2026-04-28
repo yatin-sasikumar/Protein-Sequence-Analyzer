@@ -1,56 +1,110 @@
 from Bio import SeqIO
 from Bio.SeqUtils.ProtParam import ProteinAnalysis
-import csv
+from openpyxl import Workbook
+from openpyxl.styles import Font, Alignment
 
-# Input and Output files
 input_fasta = "input.fasta"
-output_csv = "output.csv"
+output_excel = "output.xlsx"
 
-# Open CSV file
-with open(output_csv, mode='w', newline='') as file:
-    writer = csv.writer(file)
+wb = Workbook()
+ws = wb.active
 
-    # Header row
-    writer.writerow([
-        "Protein_ID",
-        "Length",
-        "Molecular_Weight",
-        "Isoelectric_Point",
-        "GRAVY",
-        "Instability_Index",
-        "Aromaticity",
-        "Helix",
-        "Turn",
-        "Sheet"
-    ])
+# Styles
+bold = Font(bold=True)
+right = Alignment(horizontal='right')
+left = Alignment(horizontal='left')
 
-    # Read FASTA
-    for record in SeqIO.parse(input_fasta, "fasta"):
-        seq = str(record.seq)
-        analysis = ProteinAnalysis(seq)
+row = 1  # Track current row
 
-        length = len(seq)
-        mw = analysis.molecular_weight()
-        pI = analysis.isoelectric_point()
-        gravy = analysis.gravy()
-        instability = analysis.instability_index()
-        aromaticity = analysis.aromaticity()
+for record in SeqIO.parse(input_fasta, "fasta"):
+    seq = str(record.seq)
+    analysis = ProteinAnalysis(seq)
 
-        # Secondary structure fraction
-        helix, turn, sheet = analysis.secondary_structure_fraction()
+    # --- Protein Name ---
+    ws.cell(row=row, column=1, value=record.id).font = bold
+    row += 2
 
-        # Write row
-        writer.writerow([
-            record.id,
-            length,
-            round(mw, 2),
-            round(pI, 2),
-            round(gravy, 3),
-            round(instability, 2),
-            round(aromaticity, 3),
-            round(helix, 3),
-            round(turn, 3),
-            round(sheet, 3)
-        ])
+    # --- Composition ---
+    ws.cell(row=row, column=1, value="Composition").font = bold
+    row += 1
 
-print("Analysis complete. Results saved to output.csv")
+    aa_percent = analysis.amino_acids_percent
+
+    for aa in sorted(aa_percent.keys()):
+        ws.cell(row=row, column=1, value=aa).alignment = left
+
+        cell = ws.cell(row=row, column=2, value=aa_percent[aa]/100)
+        cell.number_format = '0.00%'   # Excel % formatting
+        cell.alignment = right
+
+        row += 1
+
+    row += 1  # empty row
+
+    # --- Parameters ---
+    ws.cell(row=row, column=1, value="Parameter").font = bold
+    ws.cell(row=row, column=2, value="Value").font = bold
+    row += 1
+
+    # Length
+    ws.cell(row=row, column=1, value="Length").alignment = left
+    ws.cell(row=row, column=2, value=len(seq)).alignment = right
+    row += 1
+
+    # Molecular Weight
+    ws.cell(row=row, column=1, value="Molecular Weight").alignment = left
+    cell = ws.cell(row=row, column=2, value=round(analysis.molecular_weight(), 2))
+    cell.number_format = '0.00 "Da"'
+    cell.alignment = right
+    row += 1
+
+    # Isoelectric Point
+    ws.cell(row=row, column=1, value="Isoelectric Point").alignment = left
+    ws.cell(row=row, column=2, value=round(analysis.isoelectric_point(), 2)).alignment = right
+    row += 1
+
+    # GRAVY
+    ws.cell(row=row, column=1, value="GRAVY").alignment = left
+    ws.cell(row=row, column=2, value=round(analysis.gravy(), 3)).alignment = right
+    row += 1
+
+    # Instability Index
+    ws.cell(row=row, column=1, value="Instability Index").alignment = left
+    ws.cell(row=row, column=2, value=round(analysis.instability_index(), 2)).alignment = right
+    row += 1
+
+    # Aromaticity
+    ws.cell(row=row, column=1, value="Aromaticity").alignment = left
+    ws.cell(row=row, column=2, value=round(analysis.aromaticity(), 3)).alignment = right
+    row += 1
+
+    # Secondary Structure
+    helix, turn, sheet = analysis.secondary_structure_fraction()
+
+    ws.cell(row=row, column=1, value="Helix").alignment = left
+    cell = ws.cell(row=row, column=2, value=helix)
+    cell.number_format = '0.00%'
+    cell.alignment = right
+    row += 1
+
+    ws.cell(row=row, column=1, value="Turn").alignment = left
+    cell = ws.cell(row=row, column=2, value=turn)
+    cell.number_format = '0.00%'
+    cell.alignment = right
+    row += 1
+
+    ws.cell(row=row, column=1, value="Sheet").alignment = left
+    cell = ws.cell(row=row, column=2, value=sheet)
+    cell.number_format = '0.00%'
+    cell.alignment = right
+    row += 1
+
+    row += 2  # space before next protein
+
+# Adjust column widths
+ws.column_dimensions['A'].width = 25
+ws.column_dimensions['B'].width = 20
+
+wb.save(output_excel)
+
+print("Formatted analysis saved to output.xlsx")
