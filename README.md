@@ -23,7 +23,6 @@ A Python-based tool to analyze protein sequences from FASTA files. It computes k
    ```bash
    python main.py
 
-
 ## Input
 The input should be a FASTA file containing one or more protein sequences.
 Example: 
